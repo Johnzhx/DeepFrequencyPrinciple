@@ -55,7 +55,7 @@ model=load_model('my_model_Resnet18-1_80.h5')
 ###reconstruct the model, and appoint the -1 and -2 hidden layers as output layer respectly###
 layer_model = Model(inputs=model.input, outputs=model.layers[65].output)
 
-###feature is the output###
+###feature is the output, but it is seen as the input of the learning component in the paper###
 feature=layer_model.predict(x)
 
 ###reshape feature into needed shape, for computing LFR###
@@ -192,7 +192,7 @@ for i in [0.02,0.03,0.04,0.05,0.06,0.08,0.09,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45
     ###compute the distance of x and itself, for computing LFR###
     dist_input=compute_distances_no_loops(R['train_inputs'],R['train_inputs']) 
     
-    ###to normalize the output###
+    ###to normalize the input###
     out_Univ_tmp=normalization_input(out_Univ_tmp)
     
     ###compute the LFR###
