@@ -82,49 +82,26 @@ train_labels=train_labels0[allset_train,:]
 
 ###create a ditionary to save data and variates.###
 R={}
+
+###the following lines are all about computing LFR###
+
 R['train_inputs'] = train_images
 R['y_true_train'] = train_labels
 
+###i represents for differen delta###
 for i in [0.02,0.03,0.04,0.05,0.06,0.08,0.09,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.6,0.7,0.8,0.9,1.0,1.2,1.4,1.6,1.8,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0,20.0,22.0,24.0,26.0,28.0,30.0,35.0,40.0,45.0,50.0]:
+    ###the delta###
     R['s_filter_wid'] = [i]
     
-    lenarg=np.shape(sys.argv)[0] #Sys.argv[ ]其实就是一个列表，里边的项为用户输入的参数，关键就是要明白这参数是从程序外部输入的，而非代码本身的什么地方，要想看到它的效果就应该将程序保存了，从外部来运行程序并给出参数。
-    if lenarg>1:
-        ilen=1
-        while ilen<lenarg:
-            if sys.argv[ilen]=='-m':
-                R['num_unit']=np.int32(sys.argv[ilen+1])
-            if sys.argv[ilen]=='-g':
-                R['gpu']=[np.int32(sys.argv[ilen+1])] 
-            if sys.argv[ilen]=='-lr':
-                R['learning_rate']=np.float32(sys.argv[ilen+1])  
-            if sys.argv[ilen]=='-seed':
-                R['seed']=np.int32(sys.argv[ilen+1])
-            if sys.argv[ilen]=='-step':
-                R['Total_Step']=np.int32(sys.argv[ilen+1])
-            if sys.argv[ilen]=='-inputd':
-                R['input_dim']=np.int32(sys.argv[ilen+1])
-            if sys.argv[ilen]=='-delta':
-                R['s_filter_wid']=[np.float32(sys.argv[ilen+1])]
-            if sys.argv[ilen]=='-tol':
-                R['tol']=np.float32(sys.argv[ilen+1])
-            if sys.argv[ilen]=='-act':
-                R['ActFuc']=np.int32(sys.argv[ilen+1])
-            if sys.argv[ilen]=='-layer':   
-                R['hidden_units']=[num_unit]*np.int32(sys.argv[ilen+1])
-            if sys.argv[ilen]=='-dir':
-                sBaseDir=sys.argv[ilen+1]
-            if sys.argv[ilen]=='-subfolder':
-                R['subfolder']=sys.argv[ilen+1]
-            ilen=ilen+2
-    
+    ###the folder name, and also 80 stands for the training epochs###
     FolderName = r'my_model_Resnet18-1_80'+str(R['s_filter_wid'])+'/'
     R['FolderName'] = FolderName
     mkdir(FolderName)
-    def savefile(): #保存模型参数的函数
+    
+    ###to save the parameters in the model.###
+    def savefile(): 
         with open('%s/objs.pkl'%(FolderName), 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump(R, f, protocol=4)
-        #序列化对象，将对象obj保存到文件file中去
         text_file = open("%s/Output.txt"%(FolderName), "w")
         for para in R:
             if np.size(R[para])>20:
@@ -134,23 +111,9 @@ for i in [0.02,0.03,0.04,0.05,0.06,0.08,0.09,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45
         for para in sys.argv: 
             text_file.write('%s  '%(para))
         text_file.close()
-        #写到txt方便看
     
-    def normalization_input(out_Univ_f): #（对每一列归一化）
-        out_Univ_g=[]
-        for i in out_Univ_f:
-            num=np.mean(i,axis=0,keepdims=True)
-            j = i - num
-            ji = abs(j)
-            #print(ji.shape)
-            maxx = np.max(ji,axis=0,keepdims=True)
-            #print(maxx.shape)
-            ii = j/maxx
-            #print(ii)
-            out_Univ_g.append(ii)
-        return(out_Univ_g)
-    
-    def normalization_input(out_Univ_f): #（对每一列归一化）
+    ###to normalize every column of the -1 and -2 hidden layers.###
+    def normalization_input(out_Univ_f): 
         out_Univ_g=[]
         for i in out_Univ_f:
             num=np.mean(i,axis=0,keepdims=True)
@@ -163,6 +126,8 @@ for i in [0.02,0.03,0.04,0.05,0.06,0.08,0.09,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45
             #print(ii)
             out_Univ_g.append(ii)
         return(out_Univ_g)
+    
+    ###from here start, the functions below are all for computing LFR###
     
     def compute_distances_no_loops(Y, X): #求两个矩阵之间的距离，其中X,Y皆为矩阵，axis是对行求和，矩阵**2作用到每个元素上面。这里，X与Y的size是(train size,input dim)。即，每一行是一个input。
         dists = -2 * np.dot(X, Y.T) + np.sum(Y**2,axis=1) + np.sum(X**2, axis=1)[:, np.newaxis] #后两者最后变成了n行1列，每行都是一个input的二范数，而前者也是对input做内积，[:, np.newaxis]是用来增加维数的,这里使用过后，np.sum(X**2, axis=1)[:, np.newaxis]是按照列加到每一列的（可以当做，做了转至，然后广播加上去的），试验用文件有范例。
@@ -218,7 +183,10 @@ for i in [0.02,0.03,0.04,0.05,0.06,0.08,0.09,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45
              ratio=low_fre_ratio_one(out,R['y_true_train'],R['s_filter_wid'],diff_x2=[])
              ratio_all.append(ratio)
          return ratio_all #如果有多个delta，那么应该是形如:[[1,2],[3,4]...[n,n+1]]，其中每组依次对应[delta1,delta2]；且依次对应，输入层，第一层，第二层...第n层
-      
+     
+    ###To here end, all above are for computing LFR###
+        
+     
     dist_input=compute_distances_no_loops(R['train_inputs'],R['train_inputs']) #算x的‘距离’，进而算低频成分，这个是不会随着训练改变的
     
     out_Univ_tmp=normalization_input(out_Univ_tmp)
