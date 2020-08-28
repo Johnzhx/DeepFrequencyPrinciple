@@ -137,4 +137,3 @@ plt.xticks(fontproperties = 'Times New Roman', size = 16)
 plt.legend(fontsize=16) 
 fntmp = '%s test_acc'%(target_folder)
 mySaveFig(plt,fntmp,ax=ax,isax=1,iseps=0)
-
