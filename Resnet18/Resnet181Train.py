@@ -219,7 +219,7 @@ R['hist_test_acc']=hist_test_acc
 ###save the file###
 savefile()
 
-###save the model, for computing LFR###
+###save the model, for computing LFR.One thing deserves attention is that 80 stands for the total training epochs. So, for different epochs, this number is changed###
 model.save('my_model_Resnet18-1_80.h5') 
 del model  # deletes the existing model
 
