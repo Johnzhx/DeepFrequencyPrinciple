@@ -1,1 +1,1 @@
-To make it convenient, I put the explanation of the programs in the file ''
+To make it convenient, I put the explanation of the programs in the file 'Resnet181Train.py'. It is becasue that, expect the structure of the varients of the Resnet18, almost everything in different programs are the same. So, I concretely explain the program in the file 'Resnet181Train.py'.
