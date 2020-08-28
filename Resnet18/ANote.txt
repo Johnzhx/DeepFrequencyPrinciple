@@ -2,7 +2,7 @@ To make it convenient, I put the explanation of the programs of 'Resnet181Train.
 
 What's more, in the paper, we show the training process of the LFR. It is simply made by changing the training stage and traning epoch in the program. So, I think there's no need to submit them here. Because the intact training epochs are 80, so the programs here all contains 80 epochs.
 
-Similarly, I put the explanation of the programs of 'Resnet181ComputingLFR.py', 'Resnet182ComputingLFR.py', 'Resnet183ComputingLFR.py' and 'Resnet184ComputingLFR.py' in the file 'Resnet181ComputingLFR.py'. And in the same way, except for the imported model and the order number of the -1 and -2 hidden layers, almost everything in those programs are the same. So, I concretely explain the programs in the file 'Resnet181ComputingLFR.py'.
+Similarly, I put the explanation of the programs of 'Resnet181ComputingLFR.py', 'Resnet182ComputingLFR.py', 'Resnet183ComputingLFR.py' and 'Resnet184ComputingLFR.py' in the file 'Resnet181ComputingLFR.py'. And in the same way, except for the imported model and the order number of the -1 and -2 hidden layers(which is corresponding to the -2 and -3 layers in the paper), almost everything in those programs are the same. So, I concretely explain the programs in the file 'Resnet181ComputingLFR.py'.
 
 Importantly, to compute the training process of the LFR. One only need to change the imported model and the order number of the -1 and -2 hidden layers, then he/she could get the coresponding results. The LFR of -2 and -1 hidden layers are saved in R['ratio_last'] respectively at position -2 and -1.
 
