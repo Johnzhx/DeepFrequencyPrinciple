@@ -1,8 +1,4 @@
-#author: Zhiqin Xu 许志钦
-#email: xuzhiqin@sjtu.edu.cn
-#2019-09-24
-# coding: utf-8
-
+###import the modules###
 import keras
 import os,sys
 import matplotlib
@@ -19,21 +15,20 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from datetime import datetime
+
 os.environ["CUDA_VISIBLE_DEVICES"]='0,1,2,3'
 tf.disable_eager_execution()
 np.set_printoptions(precision=10)
+
+###to adjust the position of the picture###
 Leftp=0.18
 Bottomp=0.18
 Widthp=0.88-Leftp
 Heightp=0.9-Bottomp
 pos=[Leftp,Bottomp,Widthp,Heightp]
-    
-    
+
+###import the dataset, and make the data prepared for the experiment###
 (x_train, y_train), (x_test, y_test)=tf.keras.datasets.mnist.load_data(path='mnist.npz')
-print(x_train.shape)
-print(y_train.shape)
-print(x_test.shape)
-print(y_test.shape)
 x_train=x_train.reshape(60000,28*28)
 x_test=x_test.reshape(10000,28*28)
 y_train=y_train.reshape(60000,1)
@@ -48,23 +43,9 @@ y_train=y_train
 y_test=y_test
 y_train=keras.utils.to_categorical(y_train, num_classes = 10)
 y_test=keras.utils.to_categorical(y_test, num_classes = 10)
-print(x_train.shape)
-print(y_train.shape)
-print(x_test.shape)
-print(y_test.shape)
-print(y_test)
-'''
-def normalization_input(out_Univ_f): #（对所有元素的归一化）
-    out_Univ_g=[]
-    for i in out_Univ_f:
-        num=np.mean(i)
-        j = i - num
-        ii = (j) / max(abs(j.ravel()))
-        out_Univ_g.append(ii)
-        print(max(abs(ii.ravel())))
-    return(out_Univ_g)
-'''
-def normalization_input(out_Univ_f): #（对每一列归一化）
+
+###to normalize every column of the -1 and -2 hidden layers.###
+def normalization_input(out_Univ_f): 
     out_Univ_g=[]
     for i in out_Univ_f:
         num=np.mean(i,axis=0,keepdims=True)
@@ -78,10 +59,13 @@ def normalization_input(out_Univ_f): #（对每一列归一化）
         out_Univ_g.append(ii)
     return(out_Univ_g)
 
-def mkdir(fn): #熟悉，做目录
+###to make a direction.###
+def mkdir(fn): 
     if not os.path.isdir(fn):
         os.mkdir(fn)
-def mySaveFig(pltm, fntmp,fp=0,ax=0,isax=0,iseps=0,isShowPic=0): #熟悉，保存图片
+        
+###to save the figures###        
+def mySaveFig(pltm, fntmp,fp=0,ax=0,isax=0,iseps=0,isShowPic=0): 
     if isax==1:
         #pltm.legend(fontsize=18)
         # plt.title(y_name,fontsize=14)
@@ -103,64 +87,54 @@ def mySaveFig(pltm, fntmp,fp=0,ax=0,isax=0,iseps=0,isShowPic=0): #熟悉，保�
         return
     if isax==1:
         pltm.close()
-        
-def compute_distances_no_loops(Y, X): #求两个矩阵之间的距离，其中X,Y皆为矩阵，axis是对行求和，矩阵**2作用到每个元素上面。这里，X与Y的size是(train size,input dim)。即，每一行是一个input。
-    dists = -2 * np.dot(X, Y.T) + np.sum(Y**2,axis=1) + np.sum(X**2, axis=1)[:, np.newaxis] #后两者最后变成了n行1列，每行都是一个input的二范数，而前者也是对input做内积，[:, np.newaxis]是用来增加维数的,这里使用过后，np.sum(X**2, axis=1)[:, np.newaxis]是按照列加到每一列的（可以当做，做了转至，然后广播加上去的），试验用文件有范例。
+
+###from here start, the functions below are all for computing LFR###
+def compute_distances_no_loops(Y, X):
+    dists = -2 * np.dot(X, Y.T) + np.sum(Y**2,axis=1) + np.sum(X**2, axis=1)[:, np.newaxis] 
     return dists
-    #即，对每个dists[i][j]=X的i行做内积+Y的第j行做内积-2X的第i行和Y的第j行做内积。！！！重要的！：就是（X的第i行-Y的第j行）^2，与G(delta)里的e的指数上的(xi-xj)^2相对应,也是矩阵（但每个位置已经做了初次变换了）
-def normal_kernel(diff_x2,filter_wid): #这个就是在compute_distances_no_loops的基础上，具体地算出xi,j
-    gau_x2=np.exp(-diff_x2/2/filter_wid) #算出Xi,j，以及真正的G(delta)，算出来的就是G(delta)
-    n_con=np.sum(gau_x2,axis=1,keepdims=True)#对行求和,但是维数不变（sum一般是会降一维的）
-    n_gau_x2=gau_x2/n_con #这步就是归一化，就差乘以\vec{y}了;注意，在我的note里面y^{low,delta}是行向量，和老师的差一个转至
+    
+def normal_kernel(diff_x2,filter_wid): 
+    gau_x2=np.exp(-diff_x2/2/filter_wid) 
+    n_con=np.sum(gau_x2,axis=1,keepdims=True)
+    n_gau_x2=gau_x2/n_con 
     return n_gau_x2
 
-def gauss_filter_normalize2(f_orig,n_gau_x2): #这个是真的算出y^{low,delta}的了
-    f_new=np.matmul(n_gau_x2,f_orig) #算出y^{low,delta}
+def gauss_filter_normalize2(f_orig,n_gau_x2): 
+    f_new=np.matmul(n_gau_x2,f_orig) 
     return f_new
 
 
-def get_f_high_low(yy,xx,s_filter_wid,diff_x2=[]): #得到高频成分和低频成分；s_filter_wid是滤波宽度，就是note中的delta大小；diff_x2注意，在用的时候有的是有的——就是diff_x2=dist_input=compute_distances_no_loops(R['train_inputs'],R['train_inputs'])，没有的时候就是空的列表；
+def get_f_high_low(yy,xx,s_filter_wid,diff_x2=[]):
     #t01=time.time()
-    if len(diff_x2)==0: #空的时候，就是xx=out，就是G(delta)里的e的指数上的(xi-xj)^2,xi.xj均是向量
-        diff_x2=compute_distances_no_loops(xx,xx) #用于计算的就是以第倒数某层为input的h(x)的低频成分;得到的是整个未做变形前的G(delta)
+    if len(diff_x2)==0: 
+        diff_x2=compute_distances_no_loops(xx,xx) 
     n_gau_x2_all=[]
     for filter_wid in s_filter_wid:
-        n_gau_x2=normal_kernel(diff_x2,filter_wid) #得到归一化后的G(delta)l
-        n_gau_x2_all.append(n_gau_x2) #记录下来
-    
-    f_low=[] #按照定义算出来的低频成分
-    f_high=[] #按照定义算出来的高频成分，低频成分与高频成分此时均是矩阵
+        n_gau_x2=normal_kernel(diff_x2,filter_wid) 
+        n_gau_x2_all.append(n_gau_x2) 
+    f_low=[] 
+    f_high=[] 
     for filter_wid_ind in range(len(s_filter_wid)):
-        #f_new_norm=np.reshape(gauss_filter_normalize2(yy,n_gau_x2_all[filter_wid_ind]),[-1,10])
-        f_new_norm=gauss_filter_normalize2(yy,n_gau_x2_all[filter_wid_ind]) #得到低频成分
+        f_new_norm=gauss_filter_normalize2(yy,n_gau_x2_all[filter_wid_ind]) 
         f_low.append(f_new_norm)
-        f_high_tmp=yy-f_new_norm #原始的减去低频的，自然就是高频的
+        f_high_tmp=yy-f_new_norm 
         f_high.append(f_high_tmp)
-    return f_low, f_high #将低频和高频的返回，都是list，每个位置只是对应不同的delta罢了
-    
-#xx=np.random.rand(50,1)*2*np.pi
-#yy=np.sin(3*xx)
-#s_filter_wid=[0.1,1,2]
-#f_low,f_high=get_f_high_low(yy,xx,s_filter_wid)
-#
-#plt.figure()
-#plt.plot(xx[:,0],yy,'r*')
-#plt.plot(xx[:,0],f_low[0],'b*')
-#plt.plot(xx[:,0],f_low[1],'g*')
-#plt.plot(xx[:,0],f_low[2],'y*')
+    return f_low, f_high     
+###To here end, it is exactly the same as the one in Resnet18###
+
+###create a ditionary to save data and variates.###
 R={} 
 
 R['test_inputs']=x_test
 R['train_inputs']=x_train
-R['y_true_test']=  y_test  #get_y_func(R['test_inputs']) #生成测试机对应的真实值
-R['y_true_train']= y_train #get_y_func(R['train_inputs']) #生成训练集对应的真实值
- 
+R['y_true_test']=  y_test 
+R['y_true_train']= y_train 
 
+###normalize the ###
 R['train_inputs_nl']=normalization_input([R['train_inputs']])
-dist_input=compute_distances_no_loops(R['train_inputs_nl'][0],R['train_inputs_nl'][0]) #算x的‘距离’，进而算低频成分，这个是不会随着训练改变的
-#print(type(dist_input))
-#plt.figure()
-#plt.plot(R['test_inputs'],R['y_true_test'])
+###compute the distance of x and itself, for computing LFR###
+dist_input=compute_distances_no_loops(R['train_inputs_nl'][0],R['train_inputs_nl'][0])
+
 
 
  ### used for saved all parameters and data 保存所有参数
