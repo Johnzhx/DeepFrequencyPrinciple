@@ -199,6 +199,6 @@ R['hist_test_acc']=hist_test_acc
 
 savefile()
 
-model.save('my_model_Resnet18-2_80.h5')  # creates a HDF5 file 'my_model.h5'
+model.save('my_model_Resnet18-2_80.h5') 
 del model  
 model = load_model('my_model_Resnet18-2_80.h5')
