@@ -8,4 +8,6 @@ Importantly, to compute the training process of the LFR. One only need to change
 
 Because of the reason that the trained models are too big to upload, one need to run 'Resnet181Train.py' first, and then use 'Resnet181ComputingLFR.py' to compute LFR.
 
-Finally, after running 'Resnet18xTrain.py' and 'Resnet18xComputingLFR.py', then you could run the program 'PlotCdfAndRdf.py'. This program is used to draw the picture of the training process of the LFR in the papper. To successfully this program, one should make sure that the program 'BasicFunc.py' is downloaded and saved in the same folder.
+Finally, after running 'Resnet18xTrain.py' and 'Resnet18xComputingLFR.py', then you could run the program 'PlotCdfAndRdf.py'. This program is used to draw the picture of the training process of the LFR in the papper. To make the training process of the LFR beautiful, one could prepare different LFR at several epochs. And to successfully this program, one should make sure that the program 'BasicFunc.py' is downloaded and saved in the same folder.
+
+To draw the CDF and RDF, one also need to swap the delta. So when you run 'Resnet18xComputingLFR.py', please make sure deltas have been fully swaped.
