@@ -26,43 +26,41 @@ from keras.preprocessing import image
 import pickle
 import sys
 
-
+###fix the random seed to make sure the experiment is repeatable. And we randomly split the original training set into a training set and a validation set.###
 np.random.seed(1)
 allset = np.random.permutation(50000)
 allset_train = allset[10000:50000]
 allset_validation = allset[0:10000]
-
-
-R={}
-
 tf.compat.v1.set_random_seed(40)
 
-def mkdir(fn): #熟悉，做目录
+###create a ditionary to save data and variates.###
+R={}
+
+###to make a direction.###
+def mkdir(fn):
     if not os.path.isdir(fn):
         os.mkdir(fn)
 
-
+###to save the relative loss and acc of the experiment.###
 FolderName = r'loss_and_acc_-1'+'/'
 R['FolderName'] = FolderName
 mkdir(FolderName)
 
-def savefile(): #保存模型参数的函数
+###to save the parameters in the model.###
+def savefile(): 
     with open('%s/objs.pkl'%(FolderName), 'wb') as f:  # Python 3: open(..., 'wb')
         pickle.dump(R, f, protocol=4)
-    #序列化对象，将对象obj保存到文件file中去
     text_file = open("%s/Output.txt"%(FolderName), "w")
     for para in R:
         if np.size(R[para])>20:
             continue
         text_file.write('%s: %s\n'%(para,R[para]))
-    
     for para in sys.argv: 
         text_file.write('%s  '%(para))
     text_file.close()
-    #写到txt方便看
 
-
-os.environ["CUDA_VISIBLE_DEVICES"]='4' #注意：4相当于用CPU运算
+###to specify a certain graphics card.###
+os.environ["CUDA_VISIBLE_DEVICES"]='3'
 
 (train_images, train_labels), (test_images, test_labels) = datasets.cifar10.load_data()
 
