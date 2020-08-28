@@ -62,38 +62,25 @@ def savefile():
 ###to specify a certain graphics card.###
 os.environ["CUDA_VISIBLE_DEVICES"]='3'
 
+###import the dataset cifar10###
 (train_images, train_labels), (test_images, test_labels) = datasets.cifar10.load_data()
 
-# Normalize pixel values to be between 0 and 1
+###Normalize pixel values to be between 0 and 1###
 train_images0, test_images0 = train_images / 255.0, test_images / 255.0
 train_labels0=keras.utils.to_categorical(train_labels, num_classes = 10)
 test_labels0=keras.utils.to_categorical(test_labels, num_classes = 10)
 
-
+###reshape and make the dataset prepared###
 train_images=train_images0[allset_train,:,:,:]
 train_labels=train_labels0[allset_train,:]
-
 validation_images = train_images0[allset_validation,:,:,:]
 validation_labels = train_labels0[allset_validation,:]
-
-
 test_images=test_images0[0:10000,:,:,:]
 test_labels=test_labels0[0:10000,:]
 
-print(train_images.shape)
-print(train_labels.shape)
-print(validation_images.shape)
-print(validation_labels.shape)
-print(test_images.shape)
-print(test_labels.shape)
-print(train_labels[-10:-1])
-
-#resnet做加和操作，因此用add函数，
-# googlenet以及densenet做filter的拼接，因此用concatenate
-#add和concatenate的区别参考链接：https://blog.csdn.net/u012193416/article/details/79479935
+###the block of the Resnet18###
 def Resnet18_block(X, filters, s ,stage, block):
     """
-    Implementation of the identity block as defined in Figure 4
     Arguments:
     X -- input tensor of shape (m, n_H_prev, n_W_prev, n_C_prev)
     f -- integer, specifying the shape of the middle CONV's window for the main path
@@ -118,7 +105,6 @@ def Resnet18_block(X, filters, s ,stage, block):
     X = Conv2D(filters = F1, kernel_size = (3, 3), strides = (s,s), padding = 'same', name = conv_name_base + '2a', kernel_initializer = glorot_uniform(seed=4))(X)
     X = BatchNormalization(axis = 3, name = bn_name_base + '2a')(X)
     X = Activation('relu')(X)
-    ### START CODE HERE ###
     # Second component of main path (≈3 lines)
     X = Conv2D(filters = F2, kernel_size = (3, 3), strides = (1,1), padding = 'same', name = conv_name_base + '2b', kernel_initializer = glorot_uniform(seed=5))(X)
     X = BatchNormalization(axis=3, name = bn_name_base + '2b')(X)
@@ -126,11 +112,9 @@ def Resnet18_block(X, filters, s ,stage, block):
     # Final step: Add shortcut value to main path, and pass it through a RELU activation (≈2 lines)
     X = layers.add([X, X_shortcut])
     X = Activation('relu')(X)
-    ### END CODE HERE ###
     return X
 
-
-
+###construct the Resnet18-1. It's worth noting that this is not the original Resnet18, it is a variant.###
 def ResNet18(input_shape = (32,32,3),classes=10):
     X_input = Input(input_shape)
     #X1 = ZeroPadding2D((3,3))(X_input)
@@ -151,7 +135,6 @@ def ResNet18(input_shape = (32,32,3),classes=10):
     X7 = Resnet18_block(X34, filters=[256,256],s=2, stage = 4, block = 'a')
     X8 = Resnet18_block(X7, filters=[256,256],s=1, stage = 4, block = 'b')
     X35 = Dropout(0.1)(X8)
-    #Stage5
  
     X11 = AveragePooling2D(pool_size=(4,4))(X35)
     X12 = Dropout(0.1)(X11)
@@ -165,56 +148,39 @@ def ResNet18(input_shape = (32,32,3),classes=10):
 
     return model
 
-
-
+###Resnet18-1 is constructed###
 model = ResNet18(input_shape = (32,32,3),classes=10)
-
 model.summary()
 
-###学习器
-sgd = tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.9, decay=1e-6, nesterov=True, name='SGD')
-adam1= tf.keras.optimizers.Adam(learning_rate=0.01, beta_1=0.85, beta_2=0.999, epsilon=1e-07, amsgrad=False,name='Adam1')
+###different learners###
 adam2 = tf.keras.optimizers.Adam(
         learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-07, amsgrad=False,
         name='Adam2'
         )
-adam3 = tf.keras.optimizers.Adam(
-        learning_rate=0.0005, beta_1=0.9, beta_2=0.999, epsilon=1e-07, amsgrad=False,
-        name='Adam3'
-        )
-
 adam4 = tf.keras.optimizers.Adam(
         learning_rate=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-07, amsgrad=False,
         name='Adam4'
         )
-def fn(correct, predicted):
-    return tf.nn.softmax_cross_entropy_with_logits(labels=correct,
-                                                   logits=predicted)
-
 adam5 = tf.keras.optimizers.Adam(
         learning_rate=0.00001, beta_1=0.9, beta_2=0.999, epsilon=1e-07, amsgrad=False,
         name='Adam5'
         )
-###
 
+###the first stage ot the training###
 model.compile(optimizer=adam2,
               loss= tf.keras.losses.CategoricalCrossentropy(),
           metrics=['accuracy'])
-
-early_stopping = EarlyStopping(monitor='val_loss', patience=40, verbose=2)
-
+early_stopping = EarlyStopping(monitor='val_loss', patience=40, verbose=2) #infact, it is useless here
 history1 = model.fit(train_images, train_labels, epochs=40, 
                      batch_size=256,
                      validation_data=(validation_images, validation_labels),
                      shuffle=True)
-
 hist_val_loss=history1.history['val_loss']
 hist_loss=history1.history['loss']
 hist_acc=history1.history['accuracy']
 hist_val_acc=history1.history['val_accuracy']
 
-
-
+###the second stage ot the training###
 model.compile(optimizer=adam4,
               loss= tf.keras.losses.CategoricalCrossentropy(),
           metrics=['accuracy'])
@@ -223,14 +189,12 @@ history2 = model.fit(train_images, train_labels, epochs=20,
                      batch_size=256,
                      validation_data=(validation_images,validation_labels),
                      shuffle=True)
-
- 
 hist_val_loss=hist_val_loss+history2.history['val_loss']
 hist_loss=hist_loss+history2.history['loss']
 hist_acc=hist_acc+history2.history['accuracy']
 hist_val_acc=hist_val_acc+history2.history['val_accuracy']
 
-
+###the last stage ot the training###
 model.compile(optimizer=adam5,
               loss= tf.keras.losses.CategoricalCrossentropy(),
           metrics=['accuracy'])
@@ -238,24 +202,13 @@ history3 = model.fit(train_images, train_labels, epochs=20,
                     batch_size=256,
                     validation_data=(validation_images,validation_labels),
                     shuffle=True)
-
- 
 hist_val_loss=hist_val_loss+history3.history['val_loss']
 hist_loss=hist_loss+history3.history['loss']
 hist_acc=hist_acc+history3.history['accuracy']
 hist_val_acc=hist_val_acc+history3.history['val_accuracy']
-
-
 (hist_test_loss,hist_test_acc) = model.evaluate(test_images,test_labels,batch_size=128)
 
-print(hist_val_loss)
-print(hist_loss)
-print(hist_acc)
-print(hist_val_acc)
-print(hist_test_loss)
-print(hist_test_acc)
-
-
+###save the loss and acc###
 R['hist_val_loss']=hist_val_loss
 R['hist_loss']=hist_loss
 R['hist_acc']=hist_acc
@@ -263,26 +216,14 @@ R['hist_val_acc']=hist_val_acc
 R['hist_test_loss']=hist_test_loss
 R['hist_test_acc']=hist_test_acc
 
-
+###save the file###
 savefile()
 
-
-model.save('my_model_Resnet18-1_80.h5')  # creates a HDF5 file 'my_model.h5'
+###save the model, for computing LFR###
+model.save('my_model_Resnet18-1_80.h5') 
 del model  # deletes the existing model
-# returns a compiled model
-# identical to the previous one
+
+###to make sure the model is correctly saved###
 model = load_model('my_model_Resnet18-1_80.h5')
-#model.summary()
-#a=model.predict(train_images[0:1,:,:,:])
 
-#layername = 'conv_2'
-
-#x = train_images[0:1,:,:,:]  #[1,28,28,1] 的形状
- 
-# 将模型作为一个层，输出第7层的输出
-#layer_model = Model(inputs=model.input,outputs=model.layers[5].output)
- 
-#feature=layer_model.predict(x)
- 
-#print(feature)
 
