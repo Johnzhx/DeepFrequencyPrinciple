@@ -46,7 +46,7 @@ train_labels=train_labels0[allset_train,:]
 ###x is the input###
 x = train_images
 
-###this list is used for saving the -1 and -2 hidden layer###
+###this list is used for saving the -1 and -2 hidden layer, which is corresponding to the -2 and -3 layers in the paper.###
 out_Univ_tmp = []
 
 ###load the trained model, the model here is also the whole-training-process one.###
