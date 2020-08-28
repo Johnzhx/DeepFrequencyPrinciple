@@ -1,2 +1,7 @@
 # Deep-frequency-principle-towards-understanding-why-deeper-learning-is-faster
+
 This is a repository corresponding to the paper 'Deep frequency principle towards understanding why deeper learning is faster'. The repository mainly introduces the experiments carried out in the paper concretely.
+
+Understanding the effect of depth in deep learning is a critical problem. In this work, we utilize the Fourier analysisto empirically provide a promising mechanism to understandwhy deeper learning is faster. To this end, we separate a deep neural network into two parts in the analysis, one is a pre-condition component and the other is a learning component, in which the output of the pre-condition one is the input of the learning one. Based on experiments of deep networksand real dataset, we propose a deep frequency principle, that is, the effective target function for a deeper hidden layer biases towards lower frequency during the training. Therefore,the learning component effectively learns a lower frequency function if the pre-condition component has more layers. Due to the well-studied frequency principle, i.e., deep neural net-works learn lower frequency functions faster, the deep fre-quency principle provides a reasonable explanation to why deeper learning is faster. We believe these empirical studies would be valuable for future theoretical studies of the effect of depth in deep learning.
+
+In this repository, the experiments about
