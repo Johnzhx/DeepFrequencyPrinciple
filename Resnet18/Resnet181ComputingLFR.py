@@ -21,75 +21,66 @@ config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth=True 
 tf.compat.v1.keras.backend.set_session(tf.compat.v1.Session(config=config))
 
-###fix the random seed, and insure it is the same as the one in 'Resnet181Training.py'###
+###fix the random seed, and insure it is the same as the one in 'Resnet181Train.py'###
 np.random.seed(1)
 allset = np.random.permutation(50000)
 allset_train = allset[10000:50000]
 allset_validation = allset[0:10000]
-print(allset)
 
-
-def mkdir(fn): #熟悉，做目录
+###to make a direction.###
+def mkdir(fn): 
     if not os.path.isdir(fn):
         os.mkdir(fn)
 
+###import the dataset cifar10###
 (train_images, train_labels), (test_images, test_labels) = datasets.cifar10.load_data()
-# Normalize pixel values to be between 0 and 1
+
+###Normalize pixel values to be between 0 and 1###
 train_images0, test_images0 = train_images / 255.0, test_images / 255.0
 train_labels0=keras.utils.to_categorical(train_labels, num_classes = 10)
 
+###reshape and make the dataset prepared###
 train_images=train_images0[allset_train,:,:,:]
-print(train_images.shape)
 train_labels=train_labels0[allset_train,:]
-print(train_labels.shape)
 
-# 第一步：准备输入数据
-x = train_images  #[1,28,28,1] 的形状
+###x is the input###
+x = train_images
 
-print(x[-1])
-
+###this list is used for saving the -1 and -2 hidden layer###
 out_Univ_tmp = []
-# 第二步：加载已经训练的模型
 
+###load the trained model###
 model=load_model('my_model_Resnet18-1_80.h5')
-# 第三步：将模型作为一个层，输出第7层的输出
+
+###reconstruct the model, and appoint the -1 and -2 hidden layers as output layer respectly###
 layer_model = Model(inputs=model.input, outputs=model.layers[65].output)
-# 第四步：调用新建的“曾模型”的predict方法，得到模型的输出
+
+###feature is the output###
 feature=layer_model.predict(x)
-print(np.shape(feature))
+
+###reshape feature into needed shape, for computing LFR###
 feature = feature.reshape(40000,1024)
-#print(feature)
-print(np.shape(feature))
+
+###save feature into out_Univ_tmp###
 out_Univ_tmp.append(feature)
 
+###the same above, and this is for -2 hidden layer.##
 model=load_model('my_model_Resnet18-1_80.h5')
-# 第三步：将模型作为一个层，输出第7层的输出
 layer_model = Model(inputs=model.input, outputs=model.layers[66].output)
-# 第四步：调用新建的“曾模型”的predict方法，得到模型的输出
 feature=layer_model.predict(x)
-print(np.shape(feature))
 feature = feature.reshape(40000,1024)
-#print(feature)
-print(np.shape(feature))
 out_Univ_tmp.append(feature)
 
+###reshape and make the dataset prepared for computint LFR###
 (train_images, train_labels), (test_images, test_labels) = datasets.cifar10.load_data()
 train_images=train_images.reshape(50000,32*32*3)
 test_images=test_images.reshape(10000,32*32*3)
-# Normalize pixel values to be between 0 and 1
 train_images0, test_images0 = train_images / 255.0, test_images / 255.0
 train_labels0=keras.utils.to_categorical(train_labels, num_classes = 10)
-
-
 train_images=train_images0[allset_train,:]
 train_labels=train_labels0[allset_train,:]
 
-
-print(train_images.shape)
-print(train_labels.shape)
-    
-print(train_images[-1])
-
+###create a ditionary to save data and variates.###
 R={}
 R['train_inputs'] = train_images
 R['y_true_train'] = train_labels
