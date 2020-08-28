@@ -1,1 +1,3 @@
-To make it convenient, I put the explanation of the programs in the file 'Resnet181Train.py'. It is becasue that, expect the structure of the varients of the Resnet18, almost everything in different programs are the same. So, I concretely explain the program in the file 'Resnet181Train.py'.
+To make it convenient, I put the explanation of the programs of 'Resnet181Train.py', 'Resnet182train.py', 'Resnet183Train.py' and 'Resnet184Train.py' in the file 'Resnet181Train.py'. It is becasue that, except for the structure of the varients of the Resnet18, almost everything in those programs are the same. So, I concretely explain the programs in the file 'Resnet181Train.py'.
+
+What's more, in the paper, we show the traning process of the LFR. It is simply made by changing the training stage and traning epoch in the program. So, I think there's no need to submit them here.
