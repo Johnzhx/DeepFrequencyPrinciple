@@ -6,6 +6,8 @@ Similarly, I put the explanation of the programs of 'Resnet181ComputingLFR.py', 
 
 Importantly, to compute the training process of the LFR. One only need to change the imported model and the order number of the -1 and -2 hidden layers, then he/she could get the coresponding results. The LFR of -2 and -1 hidden layers are saved in R['ratio_last'] respectively at position -2 and -1.
 
+Besides, if you want to use the output of the neural network to compute LFR. The only thing you have to do is to insure that you have replace 'the true label of the output' by 'the output of the neural network', as is shown in the program 'Resnet18xComputingLFRByNetworkOutput.py'.
+
 Because of the reason that the trained models are too big to upload, one need to run 'Resnet181Train.py' first, and then use 'Resnet181ComputingLFR.py' to compute LFR.
 
 Finally, after running 'Resnet18xTrain.py' and 'Resnet18xComputingLFR.py', then you could run the program 'PlotCdfAndRdf.py'. This program is used to draw the picture of the training process of the LFR in the papper. To make the training process of the LFR beautiful, one could prepare different LFR at several epochs. And to successfully this program, one should make sure that the program 'BasicFunc.py' is downloaded and saved in the same folder.
