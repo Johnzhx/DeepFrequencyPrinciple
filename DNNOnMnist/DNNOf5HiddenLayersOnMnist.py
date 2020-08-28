@@ -130,135 +130,91 @@ R['train_inputs']=x_train
 R['y_true_test']=  y_test 
 R['y_true_train']= y_train 
 
-###normalize the ###
+###normalize the train input###
 R['train_inputs_nl']=normalization_input([R['train_inputs']])
 ###compute the distance of x and itself, for computing LFR###
 dist_input=compute_distances_no_loops(R['train_inputs_nl'][0],R['train_inputs_nl'][0])
 
-
-
- ### used for saved all parameters and data 保存所有参数
-
-for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
-    for j in [3,4,5,6,7]:
-        R['s_filter_wid']=[i] #delta的取值，这里自然可以取多个
-        ### mkdir a folder to save all output
+###i represents for delta###
+for i in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
+    ###j represents for the number of the hidden layers. In the paper, j only takes 5. But you could change it as you want###
+    for j in [5]:
+        R['s_filter_wid']=[i] 
+        
+        ### mkdir a folder to save all output###
         sBaseDir = 'fitnd1_delta'+str(R['s_filter_wid'])+'/'
         if platform.system()=='Windows':
             device_n="0"
-            BaseDir = r'D:\跟着许志钦搞科研\验证低频比问题\deepstudy20200606/%s'%(sBaseDir)
+            BaseDir = r'D:\deepstudy20200606/%s'%(sBaseDir)
         else:
             device_n="0"
             BaseDir = sBaseDir
             matplotlib.use('Agg')
             
-        R['issave']=0 #是否保存模型参数
-        #BaseDir = 'fitnd/'
-        R['normalization']=1  #是否归一化
-        #subFolderName = '%s'%(int(np.absolute(np.random.normal([1])*100000))//int(1)) 
+        R['issave']=0 #whether save the model
+
+        R['normalization']=1  #whether conduct normalization
+        
         subFolderName = '%s'%(datetime.now().strftime("%y%m%d%H%M%S")) 
         FolderName = '%s%s/'%(BaseDir,subFolderName)
         mkdir(BaseDir)
-        mkdir(FolderName) #至此，文件目录做好了
-        if R['issave']: #是否保存model，具体的模型参数
+        mkdir(FolderName) 
+        
+        if R['issave']: 
             print('save')
             mkdir('%smodel/'%(FolderName))
-        R['FolderName']=FolderName #文件名记录一下
+            
+        R['FolderName']=FolderName 
         
         if  True: #not platform.system()=='Windows':
             shutil.copy(__file__,'%s%s'%(FolderName,os.path.basename(__file__)))
-            
-        R['input_dim']=28*28 #输入维数
-        R['output_dim']=10 #按照上面的函数定义，结果是一维的
-        R['epsion']=0.1 #整个代码就这里出现了...
         
+        ###followings are some critial parameters###
+        R['input_dim']=28*28 
+        R['output_dim']=10 
+        R['epsion']=0.1 
         R['ActFuc']=1   ###  0: ReLU; 1: Tanh; 3:sin;4: x**5,, 5: sigmoid  6 sigmoid derivate 激活函数
-        
-        #R['hidden_units']=[1500,1500,1500]
-        #R['hidden_units']=[500,500,500]
-        num_unit=500
-        R['hidden_units']=[num_unit]*j #自然就是隐藏层了
-        R['fake_hidden_units']=[num_unit]*20 #虚假的隐藏层？
-        #R['hidden_units']=[500,500]
-        #R['hidden_units']=[500,1500]
-        #R['hidden_units']=[500]
-        ### initialization standard deviation
+        num_unit=500 #the number of the neures at each hidden layers
+        R['hidden_units']=[num_unit]*j #the hidden layers
+        R['fake_hidden_units']=[num_unit]*20 
         R['astddev']=np.sqrt(1/num_unit) # for weight
-        R['bstddev']=np.sqrt(1/num_unit)# for bias terms2 #用于初始化参数的
-        
+        R['bstddev']=np.sqrt(1/num_unit)# for bias terms
         R['ASI']=0
-        R['learning_rate']=5e-5 #学习速率
-        R['learning_rateDecay']=2e-5 #学习速率衰减率
-        
+        R['learning_rate']=5e-5 
+        R['learning_rateDecay']=2e-5 
         ### setup for activation function
-        R['seed']=1 #随机种子
-        np.random.seed(R['seed']) #固定随机种子
+        R['seed']=1 #random seed
+        np.random.seed(R['seed']) #fix the random seed
         R['gpu']='0'
         os.environ["CUDA_VISIBLE_DEVICES"]='%s'%(R['gpu']) 
             
-        
-        R['plotepoch']=100 #每100次，画一次
-        R['train_size']=10000;  ### training size #训练集的大小，就是那个函数的采点数
+        R['plotepoch']=100 #plot every x epochs
+        R['train_size']=30000;  ### training size 
         R['batch_size']=R['train_size'] # int(np.floor(R['train_size'])) ### batch size
-        R['test_size']=5000  ### test size
-        R['x_start']=-np.pi/2  #math.pi*3 ### start point of input #函数从-pi/2开始
-        R['x_end']=np.pi/2  #6.28/4 #math.pi*3  ### end point of input #到pi/2结束
-        R['c_amp']=1 #最后一偏移项的倍数，取0就是没有偏移项
+        R['test_size']=10000  ### test size
         
-        R['tol']=1e-2 #停止时的训练集上的误差
+        R['tol']=1e-2 #the loss when stopping
         R['Total_Step']=600000  ### the training step. Set a big number, if it converges, can manually stop training 
         R['isresnet']=0
         R['FolderName']=FolderName   ### folder for save images
-        
-       
-        '''
-        R['y_true_test']= R['y_true_test']- np.sum(R['y_true_test'],axis=0)/R['test_size']
-        R['y_true_train']=R['y_true_train']- np.sum(R['y_true_train'],axis=0)/R['train_size']
-        '''
-        
-        print(np.sum(R['y_true_train'],axis=0,keepdims=True))
-        
+             
         R['gpu']=device_n
-        
-        lenarg=np.shape(sys.argv)[0] #Sys.argv[ ]其实就是一个列表，里边的项为用户输入的参数，关键就是要明白这参数是从程序外部输入的，而非代码本身的什么地方，要想看到它的效果就应该将程序保存了，从外部来运行程序并给出参数。
-        if lenarg>1:
-            ilen=1
-            while ilen<lenarg:
-                if sys.argv[ilen]=='-m':
-                    R['num_unit']=np.int32(sys.argv[ilen+1])
-                if sys.argv[ilen]=='-g':
-                    R['gpu']=np.int32(sys.argv[ilen+1]) 
-                if sys.argv[ilen]=='-lr':
-                    R['learning_rate']=np.float32(sys.argv[ilen+1])  
-                if sys.argv[ilen]=='-seed':
-                    R['seed']=np.int32(sys.argv[ilen+1])
-                if sys.argv[ilen]=='-step':
-                    R['Total_Step']=np.int32(sys.argv[ilen+1])
-                if sys.argv[ilen]=='-tol':
-                    R['tol']=np.float32(sys.argv[ilen+1])
-                if sys.argv[ilen]=='-act':
-                    R['ActFuc']=np.int32(sys.argv[ilen+1])
-                if sys.argv[ilen]=='-layer':   
-                    R['hidden_units']=[num_unit]*np.int32(sys.argv[ilen+1])
-                ilen=ilen+2
-                
-        #以上的东西不影响代码，暂时不关注了        
-        os.environ["CUDA_VISIBLE_DEVICES"]='%s'%(R['gpu']) #设置用哪个GPU
-        #train_inputs_normalnization=normalization_input([R['train_inputs']])
+     
+        os.environ["CUDA_VISIBLE_DEVICES"]='%s'%(R['gpu']) 
         
         t0=time.time() 
         
-        def add_layer2(x,input_dim = 1,output_dim = 1,isresnet=1,astddev=0.05, #添加一个隐藏层的程序
+        ###the function used for add one hidden layer###
+        def add_layer2(x,input_dim = 1,output_dim = 1,isresnet=1,astddev=0.05,
                        bstddev=0.05,ActFuc=0,seed=0, name_scope='hidden'):
-            if not seed==0: #固定随机种子
-                tf.set_random_seed(seed)
-            
+            if not seed==0: 
+                tf.set_random_seed(seed)    
+                
             with tf.variable_scope(name_scope, reuse=tf.AUTO_REUSE):
                 ua_w = tf.get_variable(name='ua_w', initializer=astddev)
                 ua_b = tf.get_variable(name='ua_b', initializer=bstddev) 
                 z=tf.matmul(x, ua_w) + ua_b
-                
-                
+                 
                 if ActFuc==1:
                     output_z = tf.nn.tanh(z)
                     print('tanh')
@@ -279,13 +235,11 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                 if isresnet and input_dim==output_dim:
                     output_z=output_z+x
                 return output_z,ua_w,ua_b,L2Wight
-        
-        def getWini(hidden_units=[10,20,40],input_dim = 1,output_dim_final = 1,astddev=0.05,bstddev=0.05): #这个就是生产初始化参数，构建所有的从input到output的参数了，老样子，先把所有参数生成好，再带入到等会的初始化当中
             
+        ###this function is used for initialize the parameters. And it could keep the initialized parameters fixed.###
+        def getWini(hidden_units=[10,20,40],input_dim = 1,output_dim_final = 1,astddev=0.05,bstddev=0.05):
             hidden_num = len(hidden_units)
-            #print(hidden_num)
-            add_hidden = [input_dim] + hidden_units;
-            
+            add_hidden = [input_dim] + hidden_units;            
             w_Univ0=[]
             b_Univ0=[]
             
@@ -302,11 +256,12 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
             b_Univ0.append(ua_b)
             return w_Univ0, b_Univ0
         
-        w_Univ0, b_Univ0=getWini(hidden_units=R['fake_hidden_units'], #生产虚假的神经网络初始化参数
+        w_Univ0, b_Univ0=getWini(hidden_units=R['fake_hidden_units'], 
                                                  input_dim = R['input_dim'],
                                                  output_dim_final = R['output_dim'])
-        print(w_Univ0[1].shape)
-        def univAprox2(x0, hidden_units=[10,20,40],input_dim = 1,output_dim_final = 1, #生成神经网络框架
+        
+        ###now we are constructing the whole network###
+        def univAprox2(x0, hidden_units=[10,20,40],input_dim = 1,output_dim_final = 1, #
                        isresnet=1,astddev=0.05,bstddev=0.05,
                        ActFuc=0,seed=0,ASI=1):
             if seed==0:
@@ -320,10 +275,7 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
             b_Univ=[] 
             out_Univ=[] 
              
-            
-        
             output=x0
-            
             
             for i in range(hidden_num):
                 input_dim = add_hidden[i]
@@ -380,12 +332,12 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
             z=z1+z2
             return z,w_Univ,b_Univ,out_Univ
         
-        tf.reset_default_graph() #开始构建神经网络了
+        ###following is the network###
+        tf.reset_default_graph() 
             
         with tf.variable_scope('Graph',reuse=tf.AUTO_REUSE) as scope:
             # Our inputs will be a batch of values taken by our functions
             x = tf.placeholder(tf.float32, shape=[None, R['input_dim']], name="x")
-            
             
             y_true = tf.placeholder_with_default(input=[[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]], shape=[None, R['output_dim']], name="y")
             in_learning_rate= tf.placeholder_with_default(input=1e-3,shape=[],name='lr')
@@ -395,41 +347,44 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                                                     isresnet=R['isresnet'],
                                                     seed=R['seed'],ASI=R['ASI'])
             
-            loss=tf.reduce_mean(tf.square(y_true-y)) #求随损失函数
+            loss=tf.reduce_mean(tf.square(y_true-y)) #the loss function
             # We define our train operation using the Adam optimizer
             adam = tf.train.AdamOptimizer(learning_rate=in_learning_rate)
             train_op = adam.minimize(loss)
         
         
-        config = tf.ConfigProto(allow_soft_placement=True) #以下是用来指派设备的
+        config = tf.ConfigProto(allow_soft_placement=True) 
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.7)
         config.gpu_options.allow_growth=True
         sess = tf.Session(config=config)
-        sess.run(tf.global_variables_initializer()) #初始化参数，没关系下面又初始化了一次 注意，这里仅仅只是初始化了，并没有真正的跑过，如果真的run，是会出问题的；本人改了代码试验过，是不行的，（注意y_true是一维的，因此可以光波到y的维数。）
-        saver = tf.train.Saver()   #保存模型的函数
+        sess.run(tf.global_variables_initializer()) 
+        saver = tf.train.Saver()  
         R['w_dis']=[]
         R['b_dis']=[] 
         R2={}
-        R2['w_Univ_ini']=[] #最一开始的W 以下均是测试集上的，但其实跑测试集时并不改变参数
-        R2['b_Univ_ini']=[] #最一开始的b
-        R2['w_Univ_end']=[] #结束时的w
-        R2['b_Univ_end']=[] #结束时的b
+        R2['w_Univ_ini']=[] #the initial w
+        R2['b_Univ_ini']=[] #the initial b
+        R2['w_Univ_end']=[] #the last w
+        R2['b_Univ_end']=[] #the last b
         R['loss_epoch']=[]
+        
+        ###now, for convenience, we create a class###
         class model():
             def __init__(self): 
-                R['y_train']=[] #最新的训练集上的跑出来的函数结果y
-                R['y_test']=[] #最新的测试集上的跑出来的函数结果y
-                R['loss_test']=[] #记录测试集损失函数变化的list，每步都有
-                R['loss_train']=[] #记录训练集损失函数变化的list
+                R['y_train']=[] #the lastest y of training set
+                R['y_test']=[] #the lastest y of test set
+                R['loss_test']=[] #loss of test set for each epoch
+                R['loss_train']=[] #loss of training set for each epoch
                 R['ratio']=[]
-                if R['issave']: #保存下模型以及模型参数
+                if R['issave']: #save the model
                     nametmp='%smodel/'%(FolderName)
                     mkdir(nametmp)
                     saver.save(sess, "%smodel.ckpt"%(nametmp))
+                
+                ###have a look at both training and test set###
                 y_test, loss_test_tmp,w_Univ_tmp,b_Univ_tmp= sess.run([y,loss,w_Univ,b_Univ],feed_dict={x: R['test_inputs'], y_true: R['y_true_test']})
-                #看看测试集
                 y_train,loss_train_tmp= sess.run([y,loss],feed_dict={x: R['train_inputs'], y_true: R['y_true_train']})
-                #再看看训练集的
+                
                 R['y_train']=y_train
                 R['y_test']=y_test
                 R['loss_test'].append(loss_test_tmp)
@@ -438,16 +393,20 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                 R2['b_Univ_ini']=b_Univ_tmp
                 R['w_dis']=[]
                 R['b_dis']=[]
-                for tmp in R2['w_Univ_ini']: #先把dis的list创建好，有几个wi，创建几个
+                for tmp in R2['w_Univ_ini']: #save w and b
                     R['w_dis'].append([])
                     R['b_dis'].append([])
                 self.ploty(name='ini') 
-            def run_onestep(self): #跑一步
+            
+            ###run one step###
+            def run_onestep(self): 
+                ###have a look first###
                 y_test, loss_test_tmp,w_Univ_tmp,b_Univ_tmp = sess.run([y,loss,w_Univ,b_Univ],feed_dict={x: R['test_inputs'], y_true: R['y_true_test']})
                 R2['w_Univ_end'],R2['b_Univ_end']=w_Univ_tmp,b_Univ_tmp
-                y_train,loss_train_tmp= sess.run([y,loss],feed_dict={x: R['train_inputs'], y_true: R['y_true_train']}) #看看训练集的情况
+                y_train,loss_train_tmp= sess.run([y,loss],feed_dict={x: R['train_inputs'], y_true: R['y_true_train']}) 
                     
-                if R['train_size']>R['batch_size']: #分批次训练，还打乱顺序哟
+                ###optimize for one time###
+                if R['train_size']>R['batch_size']: #train by the batch size, if needed
                     indperm = np.random.permutation(R['train_size'])
                     nrun_epoch=np.int32(R['train_size']/R['batch_size'])
                     
@@ -455,53 +414,55 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                         ind = indperm[ijn*R['batch_size']:(ijn+1)*R['batch_size']] 
                         _= sess.run(train_op, feed_dict={x: R['train_inputs'][ind], y_true: R['y_true_train'][ind],
                                                           in_learning_rate:R['learning_rate']})
-                else: #优化一次
+                else: 
                     _ = sess.run(train_op, feed_dict={x: R['train_inputs'], y_true: R['y_true_train'],
                                                           in_learning_rate:R['learning_rate']})
-                R['learning_rate']=R['learning_rate']*(1-R['learning_rateDecay']) #学习速率递减
-                    
+                R['learning_rate']=R['learning_rate']*(1-R['learning_rateDecay']) #change the learning rate
+                ###save the parameters###
                 R['y_train']=y_train
                 R['y_test']=y_test
                 R['loss_test'].append(loss_test_tmp)
                 R['loss_train'].append(loss_train_tmp)
-            def run(self,step_n=1): #开始真正地跑了
-                if R['issave']: #把保存的模型，恢复出来，继续训练
+                
+            def run(self,step_n=1): #run!!!f
+                if R['issave']: #save the model if needed
                     nametmp='%smodel/model.ckpt'%(FolderName)
                     saver.restore(sess, nametmp)
                 for ii in range(step_n):
                     self.run_onestep()
-                    if R['loss_train'][-1]<R['tol']: #如果最新的训练误差小于阈值就结束
+                    if R['loss_train'][-1]<R['tol']: #to decide whether to stop or not
                         print('model end, error:%s'%(R['loss_train'][-1]))
                         self.plotloss()
                         self.ploty()
                         self.savefile()
                         R['step']=ii
-                        if R['issave']: #保存模型
+                        if R['issave']: 
                             nametmp='%smodel/'%(FolderName)
-                            shutil.rmtree(nametmp) #shutil.rmtree() 表示递归删除文件夹下的所有子文件夹和子文件
+                            shutil.rmtree(nametmp) #shutil.rmtree() 
                             saver.save(sess, "%smodel.ckpt"%(nametmp))
                         break
                     if ii==0:
                         print('initial %s'%(np.max(R['y_train'])))
                         
-                    if ii%R['plotepoch']==0: #打印一下
-                        losss,y_train,out_Univ_tmp= sess.run([loss,y,out_Univ],feed_dict={x: R['train_inputs'], y_true: R['y_true_train']}) #每个隐藏层层和输出层的此时神经元的值
-                        #print(out_Univ_tmp[-2][-1][-1])
-                        if R['normalization']==1 :
+                    if ii%R['plotepoch']==0: 
+                        losss,y_train,out_Univ_tmp= sess.run([loss,y,out_Univ],feed_dict={x: R['train_inputs'], y_true: R['y_true_train']}) 
+                        
+                        if R['normalization']==1 : #normalize if needed
                             out_Univ_tmp=normalization_input(out_Univ_tmp)
-                        #print(out_Univ_tmp)
-                        #print(out_Univ_tmp[-2][-1][-1])
-                        ratio_tmp=self.low_fre_ratio(out_Univ_tmp,y_train) #低频比，这个其实在note中比较清楚，计算以每个隐藏层作为输入的，此时的低频比是多少；注意的是，以真实值作为output是不会变的；那么，其实就会慢慢地收敛到真实的情况
-                        R['ratio'].append(np.squeeze(ratio_tmp)) #把ratio_tmp从list变成向量了
-                        R['ratio_last']=R['ratio'][-1]
-                        R['loss_epoch'].append(losss)
+                       
+                        ratio_tmp=self.low_fre_ratio(out_Univ_tmp,y_train) #compute the LFR
+                        R['ratio'].append(np.squeeze(ratio_tmp)) #save LFR
+                        R['ratio_last']=R['ratio'][-1]#save the lastest LFR
+                        R['loss_epoch'].append(losss)#save the loss
                         R['step']=ii
-                        print('len:%s, ii:%s'%(len(R['ratio']),ii)) #打印一下 R['ratio']的长度和现在的步数
-                        print('time elapse: %.3f'%(time.time()-t0)) #打印一下时间
-                        print('model, epoch: %d, test loss: %f' % (ii,R['loss_test'][-1])) #打印一下测试集的损失函数值
-                        print('model, epoch: %d, train loss: %f' % (ii,R['loss_train'][-1])) #打印一下训练集的损失函数值
-                        print('ratio:%s'%(ratio_tmp)) #打印一下当前的低频比值
-        
+                        ###print some useful information###
+                        print('len:%s, ii:%s'%(len(R['ratio']),ii)) 
+                        print('time elapse: %.3f'%(time.time()-t0)) 
+                        print('model, epoch: %d, test loss: %f' % (ii,R['loss_test'][-1]))
+                        print('model, epoch: %d, train loss: %f' % (ii,R['loss_train'][-1])) 
+                        print('ratio:%s'%(ratio_tmp))
+                        
+                        ###calculate the acc of the training set and test set, and 500 need to be changed, coresponding to the size you use###
                         x_train_label = sess.run(y,feed_dict={x: R['train_inputs'], y_true: R['y_true_train']})
                         x_train_label_location=np.argmax(x_train_label,axis=1)
                         y_train_label_location=np.argmax(y_train,axis=1)
@@ -509,7 +470,7 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                         for i in range(500):
                             if x_train_label_location[i] == y_train_label_location[i]:
                                 iii = iii + 1
-                        print('训练集上的正确率：'+str(iii/500))
+                        print('the acc of training size：'+str(iii/500))
                         R['train_accuracy']=iii/500
                         R['train_loss']=sess.run(loss,feed_dict={x: R['train_inputs'], y_true: R['y_true_train']})
                         
@@ -520,7 +481,7 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                         for i in range(500):
                             if x_test_label_location[i] == y_test_label_location[i]:
                                 iii = iii + 1
-                        print('测试集上的正确率：'+str(iii/500))
+                        print('the acc of test size：'+str(iii/500))
                         R['test_accuracy']=iii/500
                         R['test_loss']=sess.run(loss,feed_dict={x: R['test_inputs'], y_true: R['y_true_test']})
                         
@@ -532,28 +493,32 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                             nametmp='%smodel/'%(FolderName)
                             shutil.rmtree(nametmp)
                             saver.save(sess, "%smodel.ckpt"%(nametmp))
-                    
+                            
+            ###from here start, the functions below are all for computing LFR###
             def low_fre_ratio_one(self,xx,yy,s_filter_wid,diff_x2=[]):
                 #print(type(diff_x2))
-                f_low, f_high=get_f_high_low(yy,xx,s_filter_wid,diff_x2) #获得低频和高频的成分
-                syy=np.sum(np.square(yy)) #计算真实的y的矩阵范数，这是不变的，有意思的是
+                f_low, f_high=get_f_high_low(yy,xx,s_filter_wid,diff_x2)
+                syy=np.sum(np.square(yy)) 
                 ratio=[]
-                for f_ in f_low: #如果有多个delta,就会得到多个f_low
-                    sf=np.sum(np.square(f_))/syy #计算低频比，即低频成分的矩阵范数除以真实的y的矩阵范数
+                for f_ in f_low: 
+                    sf=np.sum(np.square(f_))/syy 
                     ratio.append(sf) 
                 #print(np.shape(ratio))
-                return ratio #返回的是一个list，但这个list可能又不止一个元素，因为有不止一个f_low
+                return ratio 
                 
             def low_fre_ratio(self,output_all,y):
                  ratio_all=[]
-                 ratio=self.low_fre_ratio_one(R['train_inputs_nl'][0],R['y_true_train'],R['s_filter_wid'],diff_x2=dist_input) #这个是不变的，以真实的input和output计算出的
+                 ratio=self.low_fre_ratio_one(R['train_inputs_nl'][0],R['y_true_train'],R['s_filter_wid'],diff_x2=dist_input) 
                  ratio_all.append(ratio) 
-                 for out in output_all: #以此计算以每个隐藏层的神经元作为input，真实的y作为output的低频比
+                 for out in output_all: 
                      ratio=self.low_fre_ratio_one(out,R['y_true_train'],R['s_filter_wid'],diff_x2=[])
                      ratio_all.append(ratio)
-                 return ratio_all #如果有多个delta，那么应该是形如:[[1,2],[3,4]...[n,n+1]]，其中每组依次对应[delta1,delta2]；且依次对应，输入层，第一层，第二层...第n层
+                 return ratio_all 
+            ###To here end, all above are for computing LFR, and they are the same as in Resnet18###
+            
+            ###plot the loss. In fact, this function is not important at all. So, you could delete it if you wish.###
             def plotloss(self): 
-                plt.figure() #画损失函数
+                plt.figure() 
                 ax = plt.gca()
                 y1 = R['loss_test']
                 y2 = R['loss_train']
@@ -566,13 +531,12 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                 fntmp = '%sloss'%(FolderName)
                 mySaveFig(plt,fntmp,ax=ax,isax=1,iseps=0)
                 
-                
-                ratio_tmp=np.stack(R['ratio']) #画低频比了，这里将R['ratio']本来是个list，然后黏成了一个大的矩阵了,而且是增加一个维度的黏！
-                layern=np.shape(R['ratio'])[1] #即，行数，也就是一共有多少个低频比每次
-                # print(np.shape(R['ratio'])) = (10,5,2) 10是第10个plotepoch，5是5个低频比，2是两个delta
+                ###plot the LFR###
+                ratio_tmp=np.stack(R['ratio']) 
+                layern=np.shape(R['ratio'])[1]
                 plt.figure()
                 ax = plt.gca() 
-                for ijk  in range(layern): #不同倒数层最为input 分开画，要是有多个delta，自然就分开画多条曲线
+                for ijk  in range(layern): 
                     plt.plot(ratio_tmp[:,ijk],label='layer:%s'%(ijk))
                     
                 plt.xlabel('epoch (*%s)'%(R['plotepoch']),fontsize=18)
@@ -581,7 +545,7 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                 fntmp = '%slowfreratio'%(FolderName)
                 mySaveFig(plt,fntmp,ax=ax,isax=1,iseps=0)
                 
-                plt.figure() #这个是重复了
+                plt.figure() 
                 ax = plt.gca()
                 y1 = R['loss_test']
                 y2 = R['loss_train']
@@ -594,21 +558,19 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                 fntmp = '%sloss'%(FolderName)
                 mySaveFig(plt,fntmp,ax=ax,isax=1,iseps=0)
                 
-                
-                #下面这个图的横坐标坐标尺度没有变，然后损失函数和低频闭画到一张图里了
-                t=np.arange(np.shape(R['loss_train'])[0]) #np.arange([start, ]stop, [step, ]dtype=None)用于生成等差数组
+                t=np.arange(np.shape(R['loss_train'])[0])
                 fig, ax1 = plt.subplots()
                 
                 color = 'tab:red'
                 ax1.set_xlabel('epoch',fontsize=18)
                 ax1.set_ylabel('loss', color=color,fontsize=18)
-                ax1.plot(t, R['loss_train'], color=color) #画
+                ax1.plot(t, R['loss_train'], color=color) 
                 ax1.tick_params(axis='y', labelcolor=color)
                 ax1.set_yscale('log')
                 ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis 
                 color = 'tab:blue'
                 ax2.set_ylabel('low fre ratio', color=color,fontsize=18)  # we already handled the x-label with ax1
-                ax2.plot(t[::R['plotepoch']], ratio_tmp[:,-2], color=color) #后面的-2是指倒数第二层；前面是全部都要，但是每500个取一次，这是合理的，因为你ratio_tmp每R['plotepoch']才算一次
+                ax2.plot(t[::R['plotepoch']], ratio_tmp[:,-2], color=color) 
                 ax2.tick_params(axis='y', labelcolor=color)
                 
                 #fig.tight_layout()  # otherwise the right y-label is slightly clipped
@@ -616,8 +578,8 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                 mySaveFig(plt,fntmp,isax=0,iseps=0)
                 plt.close()
                 
-                #这个画的是w与b变化的大小
-                for ij in range(np.shape(R2['w_Univ_end'])[0]): #注意一下，这个会随着plotepoch的增多，而增多，因为是append，所以以前的还在
+                #plot the change of w and b
+                for ij in range(np.shape(R2['w_Univ_end'])[0]):
                     tmp=np.sqrt(np.sum(np.square(R2['w_Univ_end'][ij]-R2['w_Univ_ini'][ij])))
                     R['w_dis'][ij].append(tmp)
                     tmp=np.sqrt(np.sum(np.square(R2['b_Univ_end'][ij]-R2['b_Univ_ini'][ij])))
@@ -632,7 +594,7 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                 plt.title('wdis',fontsize=15)
                 fntmp = '%swdis'%(FolderName)
                 mySaveFig(plt,fntmp,ax=ax,isax=1,iseps=0)
-                #上面画的是w，下面画的是b
+
                 plt.figure()
                 ax = plt.gca() 
                 for ij in range(np.shape(R2['w_Univ_end'])[0]):
@@ -644,7 +606,7 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                 mySaveFig(plt,fntmp,ax=ax,isax=1,iseps=0)
                 
                     
-            def ploty(self,name=''): #如果是一维或者二维，那么就把图形化出来，就真实函数与，测试集的output
+            def ploty(self,name=''): #plot the figure if the input dim is one or two.
                 
                 if R['input_dim']==1:
                     plt.figure()
@@ -660,10 +622,9 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                     fntmp = '%su_m%s'%(FolderName,name)
                     mySaveFig(plt,fntmp,ax=ax,isax=1,iseps=0)
                     
-            def savefile(self): #保存模型参数的函数
+            def savefile(self): #save the model and parameters
                 with open('%s/objs.pkl'%(FolderName), 'wb') as f:  # Python 3: open(..., 'wb')
                     pickle.dump(R, f, protocol=4)
-                #序列化对象，将对象obj保存到文件file中去
                 text_file = open("%s/Output.txt"%(FolderName), "w")
                 for para in R:
                     if np.size(R[para])>20:
@@ -673,7 +634,6 @@ for i in [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30]:
                 for para in sys.argv: 
                     text_file.write('%s  '%(para))
                 text_file.close()
-                #写到txt方便看
                         
                     
         model1=model()
