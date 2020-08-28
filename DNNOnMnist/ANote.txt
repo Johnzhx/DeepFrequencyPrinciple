@@ -1,1 +1,5 @@
+The 'DNNOf5HiddenLayersOnMnist.py' is mainly written by tensorflow. So we think it is harder to understand than the programs in Resnet18. And it is the program integrate both 'Resnet18xTrain.py' and 'Resnet18xComputingLFR.py'. So if you have understand 'Resnet18xTrain.py' and 'Resnet18xComputingLFR.py', then we believe that you could comprehend 'DNNOf5HiddenLayersOnMnist.py' easily.
 
+Most of matters needing attention are mentioned in Resnet18. So, if you have any questions about the programs here, I strongly recommend you to go back to Resnet18. Then your questions will be likely to solve, especially the details of the programs.
+
+Similarly, you should first run 'DNNOf5HiddenLayersOnMnist.py'. And then use its results to plot CDF and RDF by 'PlotCdfAndRdf.py'.
